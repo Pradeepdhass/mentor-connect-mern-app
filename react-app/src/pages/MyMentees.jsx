@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_BASE_URL } from '../config'
+import { db } from '../firebase'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 
 function MyMentees() {
   const navigate = useNavigate()
@@ -16,12 +17,13 @@ function MyMentees() {
     const load = async () => {
       try {
         setMsg('Loading...')
-        const resp = await fetch(`${API_BASE_URL}/api/mentees`)
-        const data = await resp.json()
-        if (!resp.ok) throw new Error(data.message || 'Failed to load')
-        setMentees(data)
+        const q = query(collection(db, "users"), where("role", "==", "mentee"));
+        const querySnapshot = await getDocs(q);
+        const fetchedMentees = querySnapshot.docs.map(doc => doc.data());
+        setMentees(fetchedMentees)
         setMsg('')
       } catch (e) {
+        console.error("Fetch error:", e);
         setMsg('Failed to load mentees.')
       }
     }

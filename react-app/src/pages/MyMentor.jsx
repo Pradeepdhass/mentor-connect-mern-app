@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { API_BASE_URL } from '../config'
+import { db } from '../firebase'
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
 
 function MyMentor() {
   const [mentors, setMentors] = useState([])
@@ -14,20 +15,17 @@ function MyMentor() {
       return
     }
 
-    const backendUrl = `${API_BASE_URL}/api/mentors`
     const fetchMentors = async () => {
       setMessage('Loading mentors...')
       try {
-        const response = await fetch(backendUrl)
-        const data = await response.json()
-        if (response.ok) {
-          setMentors(data)
-          setMessage(data.length ? '' : 'No mentors are currently available.')
-        } else {
-          setMessage(data.message || 'Could not fetch mentor data.')
-        }
+        const q = query(collection(db, "users"), where("role", "==", "mentor"));
+        const querySnapshot = await getDocs(q);
+        const fetchedMentors = querySnapshot.docs.map(doc => doc.data());
+        setMentors(fetchedMentors)
+        setMessage(fetchedMentors.length ? '' : 'No mentors are currently available.')
       } catch (e) {
-        setMessage('❌ Network Error. Could not connect to the API server.')
+        console.error(e)
+        setMessage('❌ Network Error. Could not fetch mentors.')
       }
     }
     fetchMentors()
@@ -53,26 +51,19 @@ function MyMentor() {
       status.textContent = 'Submitting review...'
     }
     try {
-      const resp = await fetch(`${API_BASE_URL}/api/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          menteeEmail: currentUser.email,
-          menteeName: currentUser.name,
-          mentorEmail,
-          message: text,
-          rating: rating || undefined
-        })
-      })
-      const data = await resp.json()
-      if (resp.ok) {
-        if (status) status.textContent = '✅ Review submitted.'
-        form.reset()
-      } else {
-        if (status) status.textContent = `❌ ${data.message || 'Failed to submit review.'}`
-      }
+      await addDoc(collection(db, "feedback"), {
+        menteeEmail: currentUser.email,
+        menteeName: currentUser.name,
+        mentorEmail,
+        message: text,
+        rating: rating || null,
+        createdAt: new Date().toISOString()
+      });
+      if (status) status.textContent = '✅ Review submitted.'
+      form.reset()
     } catch (err) {
-      if (status) status.textContent = '❌ Network error.'
+      console.error(err)
+      if (status) status.textContent = '❌ Failed to submit review.'
     }
   }
 

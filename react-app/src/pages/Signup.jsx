@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
-import { API_BASE_URL } from '../config'
+import { auth, db } from '../firebase'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, setDoc } from 'firebase/firestore'
 
 function Signup() {
   useEffect(() => {
@@ -23,31 +25,24 @@ function Signup() {
         msg.textContent = 'Processing...'
         msg.className = 'mt-3 text-center small text-primary'
         try {
-          const response = await fetch(backendUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, role })
-          })
-          const data = await response.json()
-          if (response.ok) {
-            const userData = { name, email, role }
-            localStorage.setItem('currentUser', JSON.stringify(userData))
-            msg.textContent = '✅ Account created successfully! Redirecting...'
-            msg.className = 'mt-3 text-center small text-success'
-            setTimeout(() => {
-              if (role === 'mentor') {
-                window.location.href = '/mentor-dashboard'
-              } else {
-                window.location.href = '/mentee-dashboard'
-              }
-            }, 1500)
-          } else {
-            msg.textContent = `⚠️ ${data.message}`
-            msg.className = 'mt-3 text-center small text-danger'
-          }
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          const userData = { name, email: email.toLowerCase(), role, createdAt: new Date().toISOString() };
+          await setDoc(doc(db, "users", user.uid), userData);
+
+          localStorage.setItem('currentUser', JSON.stringify(userData))
+          msg.textContent = '✅ Account created successfully! Redirecting...'
+          msg.className = 'mt-3 text-center small text-success'
+          setTimeout(() => {
+            if (role === 'mentor') {
+              window.location.href = '/mentor-dashboard'
+            } else {
+              window.location.href = '/mentee-dashboard'
+            }
+          }, 1500)
         } catch (error) {
-          console.error('Fetch error:', error)
-          msg.textContent = '❌ Failed to connect to the server. Check if Node.js server is running on port 3000.'
+          console.error('Firebase error:', error)
+          msg.textContent = `❌ ${error.message}`
           msg.className = 'mt-3 text-center small text-danger'
         }
       }

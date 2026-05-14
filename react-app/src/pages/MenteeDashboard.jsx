@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { API_BASE_URL } from '../config'
+import { db } from '../firebase'
+import { collection, addDoc } from 'firebase/firestore'
 
 function MenteeDashboard() {
   useEffect(() => {
@@ -56,33 +57,24 @@ function MenteeDashboard() {
         feedbackMsg.className = 'small text-primary mt-2'
       }
       try {
-        const resp = await fetch(`${API_BASE_URL}/api/feedback`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            menteeEmail: userData.email,
-            menteeName: userData.name,
-            mentorEmail,
-            message,
-            rating: rating || undefined
-          })
-        })
-        const data = await resp.json()
-        if (resp.ok) {
-          if (feedbackMsg) {
-            feedbackMsg.textContent = '✅ Feedback submitted.'
-            feedbackMsg.className = 'small text-success mt-2'
-          }
-          feedbackForm.reset()
-        } else {
-          if (feedbackMsg) {
-            feedbackMsg.textContent = `❌ ${data.message || 'Failed to submit feedback.'}`
-            feedbackMsg.className = 'small text-danger mt-2'
-          }
-        }
-      } catch (err) {
+        await addDoc(collection(db, "feedback"), {
+          menteeEmail: userData.email,
+          menteeName: userData.name,
+          mentorEmail,
+          message,
+          rating: rating || null,
+          createdAt: new Date().toISOString()
+        });
+
         if (feedbackMsg) {
-          feedbackMsg.textContent = '❌ Network error.'
+          feedbackMsg.textContent = '✅ Feedback submitted.'
+          feedbackMsg.className = 'small text-success mt-2'
+        }
+        feedbackForm.reset()
+      } catch (err) {
+        console.error("Feedback error:", err);
+        if (feedbackMsg) {
+          feedbackMsg.textContent = '❌ Failed to submit feedback.'
           feedbackMsg.className = 'small text-danger mt-2'
         }
       }

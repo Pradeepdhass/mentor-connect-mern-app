@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_BASE_URL } from '../config'
+import { auth } from '../firebase'
+import { sendPasswordResetEmail } from 'firebase/auth'
 
 function ForgotPassword() {
   const navigate = useNavigate()
@@ -12,42 +13,25 @@ function ForgotPassword() {
       e.preventDefault()
       form.classList.add('was-validated')
       const email = document.getElementById('fpEmail')?.value.trim()
-      const newPassword = document.getElementById('fpNewPwd')?.value
-      const confirmPassword = document.getElementById('fpConfirmPwd')?.value
 
-      if (!email || !newPassword || !confirmPassword) {
-        msg.textContent = 'All fields are required.'
-        msg.className = 'mt-3 text-center small text-danger'
-        return
-      }
-      if (newPassword !== confirmPassword) {
-        msg.textContent = 'Passwords do not match.'
+      if (!email) {
+        msg.textContent = 'Email is required.'
         msg.className = 'mt-3 text-center small text-danger'
         return
       }
 
-      msg.textContent = '⌛ Updating password...'
+      msg.textContent = '⌛ Sending password reset email...'
       msg.className = 'mt-3 text-center small text-primary'
       try {
-        const resp = await fetch(`${API_BASE_URL}/api/forgot-password`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, newPassword })
-        })
-        const data = await resp.json()
-        if (resp.ok) {
-          msg.textContent = '✅ Password updated. You can now log in.'
-          msg.className = 'mt-3 text-center small text-success'
-          setTimeout(() => {
-            window.location.href = '/login'
-          }, 1200)
-        } else {
-          msg.textContent = `❌ ${data.message || 'Failed to update password.'}`
-          msg.className = 'mt-3 text-center small text-danger'
-        }
+        await sendPasswordResetEmail(auth, email);
+        msg.textContent = '✅ Password reset email sent. Check your inbox.'
+        msg.className = 'mt-3 text-center small text-success'
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 3000)
       } catch (err) {
         console.error('Forgot password error:', err)
-        msg.textContent = '❌ Network error. Check if the Node.js server is running.'
+        msg.textContent = `❌ ${err.message}`
         msg.className = 'mt-3 text-center small text-danger'
       }
     }
@@ -81,14 +65,6 @@ function ForgotPassword() {
                   <div className="mb-3">
                     <label htmlFor="fpEmail" className="form-label">Email address</label>
                     <input type="email" className="form-control" id="fpEmail" required />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="fpNewPwd" className="form-label">New Password</label>
-                    <input type="password" className="form-control" id="fpNewPwd" minLength="6" required />
-                  </div>
-                  <div className="mb-2">
-                    <label htmlFor="fpConfirmPwd" className="form-label">Confirm Password</label>
-                    <input type="password" className="form-control" id="fpConfirmPwd" minLength="6" required />
                   </div>
                   <div className="d-grid mt-3">
                     <button type="submit" className="btn btn-primary btn-lg rounded-3" style={{ backgroundColor: '#0ea5e9', border: 'none' }}>Update Password</button>

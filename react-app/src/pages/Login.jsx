@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { API_BASE_URL } from '../config'
+import { auth, db } from '../firebase'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore'
 
 function Login() {
   useEffect(() => {
@@ -23,31 +25,44 @@ function Login() {
       msg.textContent = '⌛ Logging in...'
       msg.className = 'mt-3 text-center small text-primary'
       try {
-        const response = await fetch(backendUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        })
-        const data = await response.json()
-        if (response.ok) {
-          const user = data.user
-          msg.textContent = `✅ Welcome ${user.name}! Redirecting...`
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          msg.textContent = `✅ Welcome ${userData.name}! Redirecting...`
           msg.className = 'mt-3 text-center small text-success'
-          localStorage.setItem('currentUser', JSON.stringify(user))
+          localStorage.setItem('currentUser', JSON.stringify(userData))
+          
+          if (userData.role === 'mentee') {
+            try {
+              await addDoc(collection(db, "loginEvents"), {
+                name: userData.name,
+                email: userData.email,
+                role: userData.role,
+                createdAt: new Date().toISOString()
+              });
+            } catch (e) {
+              console.error('Failed to record login event:', e);
+            }
+          }
+
           setTimeout(() => {
-            if (user.role === 'mentor') {
+            if (userData.role === 'mentor') {
               window.location.href = '/mentor-dashboard'
             } else {
               window.location.href = '/mentee-dashboard'
             }
           }, 1000)
         } else {
-          msg.textContent = `❌ ${data.message || 'Login failed.'}`
+          msg.textContent = `❌ User data not found.`
           msg.className = 'mt-3 text-center small text-danger'
         }
       } catch (error) {
-        console.error('Fetch error:', error)
-        msg.textContent = '❌ Network error. Check if the Node.js server is running.'
+        console.error('Firebase error:', error)
+        msg.textContent = '❌ Invalid credentials or network error.'
         msg.className = 'mt-3 text-center small text-danger'
       }
     }

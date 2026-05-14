@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_BASE_URL } from '../config'
+import { db } from '../firebase'
+import { collection, query, where, getDocs } from 'firebase/firestore'
 
 function Reviews() {
   const navigate = useNavigate()
@@ -16,12 +17,15 @@ function Reviews() {
     const load = async () => {
       try {
         setMsg('Loading...')
-        const resp = await fetch(`${API_BASE_URL}/api/feedback?mentorEmail=${encodeURIComponent(user.email)}`)
-        const data = await resp.json()
-        if (!resp.ok) throw new Error(data.message || 'Failed to load')
-        setItems(data)
+        const q = query(collection(db, "feedback"), where("mentorEmail", "==", user.email));
+        const querySnapshot = await getDocs(q);
+        const fetchedReviews = querySnapshot.docs.map(doc => doc.data());
+        // Sort by createdAt descending since it's not indexed
+        fetchedReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setItems(fetchedReviews)
         setMsg('')
       } catch (e) {
+        console.error("Fetch feedback error:", e);
         setMsg('Failed to load feedback.')
       }
     }
