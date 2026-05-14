@@ -1,0 +1,13 @@
+
+html, body, #root {
+  height: auto;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+}
+
+a {
+  text-decoration: inherit;
+}
