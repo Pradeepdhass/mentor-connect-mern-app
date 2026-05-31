@@ -34,7 +34,7 @@ function Home() {
               <li className="nav-item"><a className="nav-link active" href="#">Home</a></li>
               <li className="nav-item"><Link className="nav-link" to="/signup">Sign Up</Link></li>
               <li className="nav-item"><Link className="nav-link" to="/login">Login</Link></li>
-              <li className="nav-item"><a className="nav-link" href="#faq-section">FAQ</a></li>
+              <li className="nav-item"><a className="nav-link" href="#" onClick={(e) => { e.preventDefault(); document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' }); }}>FAQ</a></li>
               <li className="nav-item dropdown">
                 <a className="nav-link  d-flex align-items-center gap-1" href="#" id="resourcesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Resources <span className="small">▼</span></a>
                 <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="resourcesDropdown">
@@ -57,13 +57,13 @@ function Home() {
         <div id="heroCarousel" className="carousel slide carousel-fade position-absolute top-0 start-0 w-100 h-100" data-bs-ride="carousel" data-bs-interval="5000" style={{ zIndex: 0 }}>
           <div className="carousel-inner h-100">
             <div className="carousel-item active">
-              <img src="/images/img1.png" className="d-block w-100 carousel-img" alt="Slide 1" />
+              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80" className="d-block w-100 carousel-img" alt="Slide 1" />
             </div>
             <div className="carousel-item">
-              <img src="/images/img2.jpg" className="d-block w-100 carousel-img" alt="Slide 2" />
+              <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1200&q=80" className="d-block w-100 carousel-img" alt="Slide 2" />
             </div>
             <div className="carousel-item">
-              <img src="/images/img3.jpg" className="d-block w-100 carousel-img" alt="Slide 3" />
+              <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80" className="d-block w-100 carousel-img" alt="Slide 3" />
             </div>
           </div>
         </div>

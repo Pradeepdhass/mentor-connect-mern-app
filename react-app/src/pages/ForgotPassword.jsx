@@ -27,7 +27,7 @@ function ForgotPassword() {
         msg.textContent = '✅ Password reset email sent. Check your inbox.'
         msg.className = 'mt-3 text-center small text-success'
         setTimeout(() => {
-          window.location.href = '/login'
+          navigate('/login')
         }, 3000)
       } catch (err) {
         console.error('Forgot password error:', err)

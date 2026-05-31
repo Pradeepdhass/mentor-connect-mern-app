@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
+import { useAuth } from '../hooks/useAuth'
 
 function MentorDashboard() {
+  const { userData, loading, logout } = useAuth()
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('currentUser'))
+    if (loading) return
+
     const mainDisplayName = document.getElementById('mainDisplayName')
     const sidebarDisplayName = document.getElementById('sidebarDisplayName')
     const sidebarDisplayRole = document.getElementById('sidebarDisplayRole')
@@ -12,7 +15,7 @@ function MentorDashboard() {
 
     if (!userData || userData.role !== 'mentor') {
       alert('Access Denied. Redirecting to Login.')
-      window.location.href = '/login'
+      window.location.hash = '#/login'
       return
     }
 
@@ -24,8 +27,7 @@ function MentorDashboard() {
     if (offcanvasDisplayName) offcanvasDisplayName.textContent = welcomeMessage
 
     const handleLogout = () => {
-      localStorage.removeItem('currentUser')
-      window.location.href = '/login'
+      logout()
     }
     if (logoutBtnSidebar) logoutBtnSidebar.addEventListener('click', handleLogout)
     if (logoutBtnOffcanvas) logoutBtnOffcanvas.addEventListener('click', handleLogout)
@@ -34,7 +36,7 @@ function MentorDashboard() {
       if (logoutBtnSidebar) logoutBtnSidebar.removeEventListener('click', handleLogout)
       if (logoutBtnOffcanvas) logoutBtnOffcanvas.removeEventListener('click', handleLogout)
     }
-  }, [])
+  }, [userData, loading, logout])
 
   return (
     <div className="container-fluid">
@@ -47,10 +49,10 @@ function MentorDashboard() {
           </div>
           <ul className="nav flex-column">
             <li className="nav-item"><a className="nav-link active" href="#"><i className="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-            <li className="nav-item"><a className="nav-link" href="/my-mentees"><i className="bi bi-people-fill me-2"></i>My Mentees</a></li>
-            <li className="nav-item"><a className="nav-link" href="/calendar"><i className="bi bi-calendar-check me-2"></i>Schedule</a></li>
-            <li className="nav-item"><a className="nav-link" href="/reviews"><i className="bi bi-star-fill me-2"></i>Reviews</a></li>
-            <li className="nav-item mt-3"><a className="nav-link" href="/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
+            <li className="nav-item"><a className="nav-link" href="#/my-mentees"><i className="bi bi-people-fill me-2"></i>My Mentees</a></li>
+            <li className="nav-item"><a className="nav-link" href="#/calendar"><i className="bi bi-calendar-check me-2"></i>Schedule</a></li>
+            <li className="nav-item"><a className="nav-link" href="#/reviews"><i className="bi bi-star-fill me-2"></i>Reviews</a></li>
+            <li className="nav-item mt-3"><a className="nav-link" href="#/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
             <li className="nav-item"><a className="nav-link text-danger fw-semibold" href="#" id="logoutBtnSidebar"><i className="bi bi-box-arrow-right me-2"></i>Logout</a></li>
           </ul>
         </nav>
@@ -74,10 +76,10 @@ function MentorDashboard() {
             </div>
             <ul className="nav flex-column">
               <li className="nav-item"><a className="nav-link active" href="#"><i className="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-              <li className="nav-item"><a className="nav-link" href="/my-mentees"><i className="bi bi-people-fill me-2"></i>My Mentees</a></li>
-              <li className="nav-item"><a className="nav-link" href="/calendar"><i className="bi bi-calendar-check me-2"></i>Schedule</a></li>
-              <li className="nav-item"><a className="nav-link" href="/reviews"><i className="bi bi-star-fill me-2"></i>Reviews</a></li>
-              <li className="nav-item mt-3"><a className="nav-link" href="/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
+              <li className="nav-item"><a className="nav-link" href="#/my-mentees"><i className="bi bi-people-fill me-2"></i>My Mentees</a></li>
+              <li className="nav-item"><a className="nav-link" href="#/calendar"><i className="bi bi-calendar-check me-2"></i>Schedule</a></li>
+              <li className="nav-item"><a className="nav-link" href="#/reviews"><i className="bi bi-star-fill me-2"></i>Reviews</a></li>
+              <li className="nav-item mt-3"><a className="nav-link" href="#/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
               <li className="nav-item"><a className="nav-link text-danger fw-semibold" href="#" id="logoutBtnOffcanvas"><i className="bi bi-box-arrow-right me-2"></i>Logout</a></li>
             </ul>
           </div>
@@ -124,9 +126,9 @@ function MentorDashboard() {
               <div className="card-box">
                 <h6>Quick Actions</h6>
                 <div className="d-flex gap-3">
-                  <a href="/requests" className="recommend-item" style={{ backgroundColor: '#ffc107' }}>Pending Requests</a>
-                  <a href="/calendar" className="recommend-item" style={{ backgroundColor: '#0d6efd' }}>Schedule Session</a>
-                  <a href="/material" className="recommend-item" style={{ backgroundColor: '#6c757d' }}>Share Resources</a>
+                  <a href="#/requests" className="recommend-item" style={{ backgroundColor: '#ffc107' }}>Pending Requests</a>
+                  <a href="#/calendar" className="recommend-item" style={{ backgroundColor: '#0d6efd' }}>Schedule Session</a>
+                  <a href="#/material" className="recommend-item" style={{ backgroundColor: '#6c757d' }}>Share Resources</a>
                 </div>
               </div>
             </div>
@@ -166,10 +168,10 @@ function MentorDashboard() {
               <div className="card-box">
                 <h6>Quick Links</h6>
                 <div className="d-flex flex-wrap gap-2">
-                  <a href="/mentee-list" className="btn btn-outline-dark btn-sm">Mentees List</a>
-                  <a href="/reports" className="btn btn-outline-dark btn-sm">Performance Reports</a>
-                  <a href="/profile-settings" className="btn btn-outline-dark btn-sm">Settings</a>
-                  <a href="/support" className="btn btn-outline-dark btn-sm">Help</a>
+                  <a href="#/mentee-list" className="btn btn-outline-dark btn-sm">Mentees List</a>
+                  <a href="#/reports" className="btn btn-outline-dark btn-sm">Performance Reports</a>
+                  <a href="#/profile-settings" className="btn btn-outline-dark btn-sm">Settings</a>
+                  <a href="#/support" className="btn btn-outline-dark btn-sm">Help</a>
                 </div>
               </div>
             </div>
@@ -187,5 +189,3 @@ function MentorDashboard() {
 }
 
 export default MentorDashboard
-
-

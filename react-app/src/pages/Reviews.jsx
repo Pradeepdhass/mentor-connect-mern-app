@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../firebase'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 
 function Reviews() {
+  const { userData: user, loading } = useAuth()
   const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('currentUser'))
+    if (loading) return
     if (!user || user.role !== 'mentor') {
-      window.location.href = '/login'
+      navigate('/login')
       return
     }
     const load = async () => {
@@ -30,7 +32,7 @@ function Reviews() {
       }
     }
     load()
-  }, [])
+  }, [user, loading, navigate])
   return (
     <div className="container py-4">
       <div className="d-flex align-items-center mb-3">

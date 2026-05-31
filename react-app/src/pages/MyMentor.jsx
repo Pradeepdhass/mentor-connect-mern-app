@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { db } from '../firebase'
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
 
 function MyMentor() {
+  const { userData: user, loading } = useAuth()
   const [mentors, setMentors] = useState([])
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    if (loading) return
+
     // Restrict page to mentees only
-    const currentUserJson = localStorage.getItem('currentUser')
-    const currentUser = currentUserJson ? JSON.parse(currentUserJson) : null
-    if (!currentUser || String(currentUser.role || '').toLowerCase() !== 'mentee') {
-      window.location.href = '/login'
+    if (!user || String(user.role || '').toLowerCase() !== 'mentee') {
+      window.location.hash = '#/login'
       return
     }
 
@@ -29,17 +31,16 @@ function MyMentor() {
       }
     }
     fetchMentors()
-  }, [])
+  }, [user, loading])
 
   const handleSubmitReview = async (e, mentorEmail) => {
     e.preventDefault()
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'))
     const form = e.currentTarget
     const text = form.querySelector('textarea')?.value.trim()
     const rating = Number(form.querySelector('select')?.value || 0)
     const status = form.querySelector('.reviewStatus')
-    const userRole = String(currentUser?.role || '').toLowerCase()
-    if (!currentUser || userRole !== 'mentee') {
+    const userRole = String(user?.role || '').toLowerCase()
+    if (!user || userRole !== 'mentee') {
       if (status) status.textContent = 'Only mentees can submit reviews.'
       return
     }
@@ -52,8 +53,8 @@ function MyMentor() {
     }
     try {
       await addDoc(collection(db, "feedback"), {
-        menteeEmail: currentUser.email,
-        menteeName: currentUser.name,
+        menteeEmail: user.email,
+        menteeName: user.name,
         mentorEmail,
         message: text,
         rating: rating || null,
@@ -69,7 +70,7 @@ function MyMentor() {
 
   return (
     <div className="p-4 bg-light">
-      <a href="/mentee-dashboard" className="btn btn-outline-secondary mb-4"><i className="bi bi-arrow-left me-2"></i> Back to Dashboard</a>
+      <a href="#/mentee-dashboard" className="btn btn-outline-secondary mb-4"><i className="bi bi-arrow-left me-2"></i> Back to Dashboard</a>
       <div className="container">
         <h3 className="mb-4">Available Mentors</h3>
         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="mentorsList">

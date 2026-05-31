@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 
 function Profile() {
+  const { userData: user, loading } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -9,15 +11,15 @@ function Profile() {
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('currentUser'))
+    if (loading) return
     if (!user) {
-      window.location.href = '/login'
+      navigate('/login')
       return
     }
     setName(user.name || '')
     setEmail(user.email || '')
     setRole(user.role || '')
-  }, [])
+  }, [user, loading, navigate])
 
   return (
     <div className="container py-4">

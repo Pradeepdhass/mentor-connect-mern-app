@@ -38,7 +38,7 @@ function CalendarPage() {
 
   return (
     <div className="container py-4" style={{ fontFamily: 'Segoe UI, sans-serif' }}>
-      <a href="/mentor-dashboard" className="btn btn-link text-decoration-none" style={{ position: 'absolute', top: 20, left: 20, fontSize: '1.2rem' }}>
+      <a href="#/mentor-dashboard" className="btn btn-link text-decoration-none" style={{ position: 'absolute', top: 20, left: 20, fontSize: '1.2rem' }}>
         <i className="bi bi-arrow-left-circle-fill"></i> Back to Dashboard
       </a>
       <h3 className="text-center mb-4">Set Your Available Time Slots</h3>

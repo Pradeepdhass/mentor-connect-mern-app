@@ -8,7 +8,6 @@ function Login() {
   useEffect(() => {
     const loginForm = document.getElementById('loginForm')
     const msg = document.getElementById('msg')
-    const backendUrl = `${API_BASE_URL}/api/login`
 
     const onSubmit = async (e) => {
       e.preventDefault()
@@ -34,26 +33,17 @@ function Login() {
           const userData = docSnap.data();
           msg.textContent = `✅ Welcome ${userData.name}! Redirecting...`
           msg.className = 'mt-3 text-center small text-success'
-          localStorage.setItem('currentUser', JSON.stringify(userData))
+          
           
           if (userData.role === 'mentee') {
-            try {
-              await addDoc(collection(db, "loginEvents"), {
-                name: userData.name,
-                email: userData.email,
-                role: userData.role,
-                createdAt: new Date().toISOString()
-              });
-            } catch (e) {
-              console.error('Failed to record login event:', e);
-            }
+            // Login event recording removed per user request
           }
 
           setTimeout(() => {
             if (userData.role === 'mentor') {
-              window.location.href = '/mentor-dashboard'
+              window.location.hash = '#/mentor-dashboard'
             } else {
-              window.location.href = '/mentee-dashboard'
+              window.location.hash = '#/mentee-dashboard'
             }
           }, 1000)
         } else {
@@ -83,7 +73,7 @@ function Login() {
           </button>
           <a className="navbar-brand fw-semibold" href="#">MentorConnect</a>
           <div className="ms-auto">
-            <a href="/signup" className="btn btn-outline-primary btn-sm">Sign Up</a>
+            <a href="#/signup" className="btn btn-outline-primary btn-sm">Sign Up</a>
           </div>
         </div>
       </nav>
@@ -124,7 +114,7 @@ function Login() {
                   </div>
                 </form>
                 <div className="text-center mt-3">
-                  <p className="small mb-0">Don't have an account? <a href="/signup" className="fw-semibold text-primary">Sign up</a></p>
+                  <p className="small mb-0">Don't have an account? <a href="#/signup" className="fw-semibold text-primary">Sign up</a></p>
                 </div>
                 <div id="msg" className="mt-3 text-center small text-danger"></div>
               </div>

@@ -1,11 +1,15 @@
 import { useEffect } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { db } from '../firebase'
 import { collection, addDoc } from 'firebase/firestore'
 
 function MenteeDashboard() {
+  const { userData, loading, logout } = useAuth();
   useEffect(() => {
-    const userDataJson = localStorage.getItem('currentUser')
-    const userData = userDataJson ? JSON.parse(userDataJson) : null
+    if (loading) return;
+
+    
+    
     const mainDisplayName = document.getElementById('mainDisplayName')
     const sidebarDisplayName = document.getElementById('sidebarDisplayName')
     const sidebarDisplayRole = document.getElementById('sidebarDisplayRole')
@@ -15,7 +19,7 @@ function MenteeDashboard() {
 
     if (!userData || userData.role !== 'mentee') {
       alert('Access Denied. Redirecting to Login.')
-      window.location.href = '/login'
+      window.location.hash = '#/login'
       return
     }
 
@@ -27,8 +31,7 @@ function MenteeDashboard() {
     if (offcanvasDisplayName) offcanvasDisplayName.textContent = welcomeMessage
 
     const handleLogout = () => {
-      localStorage.removeItem('currentUser')
-      window.location.href = '/login'
+      logout()
     }
     if (logoutBtnSidebar) logoutBtnSidebar.addEventListener('click', handleLogout)
     if (logoutBtnOffcanvas) logoutBtnOffcanvas.addEventListener('click', handleLogout)
@@ -57,15 +60,7 @@ function MenteeDashboard() {
         feedbackMsg.className = 'small text-primary mt-2'
       }
       try {
-        await addDoc(collection(db, "feedback"), {
-          menteeEmail: userData.email,
-          menteeName: userData.name,
-          mentorEmail,
-          message,
-          rating: rating || null,
-          createdAt: new Date().toISOString()
-        });
-
+        // Feedback data storage removed per user request, simulating success
         if (feedbackMsg) {
           feedbackMsg.textContent = '✅ Feedback submitted.'
           feedbackMsg.className = 'small text-success mt-2'
@@ -86,7 +81,7 @@ function MenteeDashboard() {
       if (logoutBtnOffcanvas) logoutBtnOffcanvas.removeEventListener('click', handleLogout)
       feedbackForm?.removeEventListener('submit', onFeedbackSubmit)
     }
-  }, [])
+  }, [userData, loading, logout])
 
   return (
     <div className="container-fluid">
@@ -99,10 +94,10 @@ function MenteeDashboard() {
           </div>
           <ul className="nav flex-column">
             <li className="nav-item"><a className="nav-link active" href="#"><i className="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-            <li className="nav-item"><a className="nav-link" href="/my-mentor"><i className="bi bi-person-check-fill me-2"></i>My Mentors</a></li>
-            <li className="nav-item"><a className="nav-link" href="/sessions"><i className="bi bi-calendar2-week me-2"></i>Sessions</a></li>
-            <li className="nav-item"><a className="nav-link" href="/progress"><i className="bi bi-bar-chart-fill me-2"></i>Progress</a></li>
-            <li className="nav-item mt-3"><a className="nav-link" href="/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
+            <li className="nav-item"><a className="nav-link" href="#/my-mentor"><i className="bi bi-person-check-fill me-2"></i>My Mentors</a></li>
+            <li className="nav-item"><a className="nav-link" href="#/sessions"><i className="bi bi-calendar2-week me-2"></i>Sessions</a></li>
+            <li className="nav-item"><a className="nav-link" href="#/progress"><i className="bi bi-bar-chart-fill me-2"></i>Progress</a></li>
+            <li className="nav-item mt-3"><a className="nav-link" href="#/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
             <li className="nav-item"><a className="nav-link text-danger fw-semibold" href="#" id="logoutBtnSidebar"><i className="bi bi-box-arrow-right me-2"></i>Logout</a></li>
           </ul>
         </nav>
@@ -126,10 +121,10 @@ function MenteeDashboard() {
             </div>
             <ul className="nav flex-column">
               <li className="nav-item"><a className="nav-link active" href="#"><i className="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-              <li className="nav-item"><a className="nav-link" href="/my-mentor"><i className="bi bi-person-check-fill me-2"></i>My Mentors</a></li>
-              <li className="nav-item"><a className="nav-link" href="/sessions"><i className="bi bi-calendar2-week me-2"></i>Sessions</a></li>
-              <li className="nav-item"><a className="nav-link" href="/progress"><i className="bi bi-bar-chart-fill me-2"></i>Progress</a></li>
-              <li className="nav-item mt-3"><a className="nav-link" href="/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
+              <li className="nav-item"><a className="nav-link" href="#/my-mentor"><i className="bi bi-person-check-fill me-2"></i>My Mentors</a></li>
+              <li className="nav-item"><a className="nav-link" href="#/sessions"><i className="bi bi-calendar2-week me-2"></i>Sessions</a></li>
+              <li className="nav-item"><a className="nav-link" href="#/progress"><i className="bi bi-bar-chart-fill me-2"></i>Progress</a></li>
+              <li className="nav-item mt-3"><a className="nav-link" href="#/profile"><i className="bi bi-person-lines-fill me-2"></i>Profile</a></li>
               <li className="nav-item"><a className="nav-link text-danger fw-semibold" href="#" id="logoutBtnOffcanvas"><i className="bi bi-box-arrow-right me-2"></i>Logout</a></li>
             </ul>
           </div>
@@ -176,9 +171,9 @@ function MenteeDashboard() {
               <div className="card-box">
                 <h6>Recommended Materials</h6>
                 <div className="d-flex gap-3">
-                  <a href="/books" className="recommend-item bg-book">Books</a>
-                  <a href="/videos" className="recommend-item bg-video">Videos</a>
-                  <a href="/courses" className="recommend-item bg-course">Courses</a>
+                  <a href="#/books" className="recommend-item bg-book">Books</a>
+                  <a href="#/videos" className="recommend-item bg-video">Videos</a>
+                  <a href="#/courses" className="recommend-item bg-course">Courses</a>
                 </div>
               </div>
             </div>
@@ -225,10 +220,10 @@ function MenteeDashboard() {
               <div className="card-box">
                 <h6>Quick Links</h6>
                 <div className="d-flex flex-wrap gap-2">
-                  <a href="/schedule" className="btn btn-outline-dark btn-sm">Session Schedule</a>
-                  <a href="/resources" className="btn btn-outline-dark btn-sm">Resources</a>
-                  <a href="/profile-settings" className="btn btn-outline-dark btn-sm">Settings</a>
-                  <a href="/support" className="btn btn-outline-dark btn-sm">Help</a>
+                  <a href="#/schedule" className="btn btn-outline-dark btn-sm">Session Schedule</a>
+                  <a href="#/resources" className="btn btn-outline-dark btn-sm">Resources</a>
+                  <a href="#/profile-settings" className="btn btn-outline-dark btn-sm">Settings</a>
+                  <a href="#/support" className="btn btn-outline-dark btn-sm">Help</a>
                 </div>
               </div>
             </div>

@@ -1,9 +1,12 @@
 import { useEffect } from 'react'
+import { useAuth } from '../hooks/useAuth'
 
 function Dashboard() {
+  const { userData, loading, logout } = useAuth()
+
   useEffect(() => {
-    const userDataJson = localStorage.getItem('currentUser')
-    const userData = userDataJson ? JSON.parse(userDataJson) : null
+    if (loading) return
+
     const welcomeMessage = document.getElementById('welcomeMessage')
     const displayName = document.getElementById('displayName')
     const displayEmail = document.getElementById('displayEmail')
@@ -19,16 +22,23 @@ function Dashboard() {
       if (welcomeMessage) welcomeMessage.textContent = userData.role === 'mentor' ? 'You are ready to start mentoring!' : 'Start connecting with mentors!'
     } else {
       alert('You must be logged in to view the dashboard.')
-      window.location.href = '/login'
+      window.location.hash = '#/login'
+    }
+
+    const handleLogout = () => {
+      logout()
     }
 
     if (logoutButton) {
-      logoutButton.addEventListener('click', () => {
-        localStorage.removeItem('currentUser')
-        window.location.href = '/login'
-      })
+      logoutButton.addEventListener('click', handleLogout)
     }
-  }, [])
+
+    return () => {
+      if (logoutButton) {
+        logoutButton.removeEventListener('click', handleLogout)
+      }
+    }
+  }, [userData, loading, logout])
 
   return (
     <>

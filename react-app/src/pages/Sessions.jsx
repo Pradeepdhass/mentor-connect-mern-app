@@ -1,15 +1,16 @@
 import { useEffect } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 
 function Sessions() {
+  const { userData: user, loading } = useAuth()
   const navigate = useNavigate()
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('currentUser'))
+    if (loading) return
     if (!user) {
-      window.location.href = '/login'
-      return
+      navigate('/login')
     }
-  }, [])
+  }, [user, loading, navigate])
 
   return (
     <div className="container py-4">

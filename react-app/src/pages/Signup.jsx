@@ -8,7 +8,6 @@ function Signup() {
     function registerUser(formId, nameId, emailId, passwordId, confirmPasswordId, role) {
       const form = document.getElementById(formId)
       const msg = document.getElementById('msg')
-      const backendUrl = `${API_BASE_URL}/api/register`
       const handler = async (e) => {
         e.preventDefault()
         form.classList.add('was-validated')
@@ -30,14 +29,14 @@ function Signup() {
           const userData = { name, email: email.toLowerCase(), role, createdAt: new Date().toISOString() };
           await setDoc(doc(db, "users", user.uid), userData);
 
-          localStorage.setItem('currentUser', JSON.stringify(userData))
+          
           msg.textContent = '✅ Account created successfully! Redirecting...'
           msg.className = 'mt-3 text-center small text-success'
           setTimeout(() => {
             if (role === 'mentor') {
-              window.location.href = '/mentor-dashboard'
+              window.location.hash = '#/mentor-dashboard'
             } else {
-              window.location.href = '/mentee-dashboard'
+              window.location.hash = '#/mentee-dashboard'
             }
           }, 1500)
         } catch (error) {
@@ -67,7 +66,7 @@ function Signup() {
           </button>
           <a className="navbar-brand fw-semibold" href="#">MentorConnect</a>
           <div className="ms-auto">
-            <a href="/login" className="btn btn-outline-primary btn-sm">Login</a>
+            <a href="#/login" className="btn btn-outline-primary btn-sm">Login</a>
           </div>
         </div>
       </nav>
@@ -167,7 +166,7 @@ function Signup() {
                   </div>
                 </div>
                 <div className="text-center mt-4">
-                  <p className="small mb-0">Already have an account? <a href="/login" className="fw-semibold text-primary">Login</a></p>
+                  <p className="small mb-0">Already have an account? <a href="#/login" className="fw-semibold text-primary">Login</a></p>
                 </div>
                 <div id="msg" className="mt-3 text-center small"></div>
               </div>
