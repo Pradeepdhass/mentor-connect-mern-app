@@ -96,7 +96,10 @@ function Login() {
           <Link className="btn btn-link p-0 me-3 text-dark text-decoration-none" to="/" aria-label="Back">
             <i className="bi bi-arrow-left fs-4"></i>
           </Link>
-          <Link className="navbar-brand fw-semibold text-dark text-decoration-none" to="/">MentorConnect</Link>
+          <Link className="navbar-brand fw-semibold text-dark text-decoration-none d-flex align-items-center" to="/">
+            <img src="/images/logo.png" alt="Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} className="me-2 rounded-circle" />
+            <span>MentorConnect</span>
+          </Link>
           <div className="ms-auto">
             <Link to="/signup" className="btn btn-outline-primary btn-sm rounded-pill px-3">Sign Up</Link>
           </div>

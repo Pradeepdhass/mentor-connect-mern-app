@@ -59,7 +59,7 @@ function Home() {
       <nav className="navbar navbar-expand-lg custom-navbar sticky-top shadow-sm">
         <div className="container">
           <Link className="navbar-brand fw-bold d-flex align-items-center" to="/">
-            <i className="bi bi-rocket-takeoff-fill me-2 text-info"></i>
+            <img src="/images/logo.png" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} className="me-2 rounded-circle" />
             <span>MentorConnect</span>
           </Link>
           

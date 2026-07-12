@@ -241,7 +241,7 @@ function MenteeDashboard() {
         {/* Desktop Sidebar (hidden on mobile) */}
         <nav className="col-md-3 col-lg-2 sidebar d-none d-md-flex">
   <div className="sidebar-header d-flex align-items-center py-2">
-    <i className="bi bi-rocket-takeoff-fill text-primary fs-6 me-1"></i>
+    <img src="/images/logo.png" alt="Logo" style={{ width: '22px', height: '22px', objectFit: 'contain' }} className="me-2 rounded-circle" />
     <span className="fw-semibold medium">MentorConnect</span>
   </div>
 
@@ -299,8 +299,8 @@ function MenteeDashboard() {
         {/* Mobile Header (visible on mobile only) */}
         <div className="d-flex d-md-none justify-content-between align-items-center p-3 bg-white border-bottom shadow-sm w-100">
           <Link className="navbar-brand fw-bold d-flex align-items-center" to="/">
-            <i className="bi bi-rocket-takeoff-fill text-primary fs-4 me-2"></i>
-            <span style={{ fontSize: '1.2rem' }}>MentorConnect</span>
+            <img src="/images/logo.png" alt="Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} className="me-2 rounded-circle" />
+            <span>MentorConnect</span>
           </Link>
           <button className="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
             <i className="bi bi-list fs-4"></i>

@@ -46,7 +46,10 @@ function ForgotPassword() {
           <Link className="btn btn-link p-0 me-3 text-dark text-decoration-none" to="/login" aria-label="Back">
             <i className="bi bi-arrow-left fs-4"></i>
           </Link>
-          <Link className="navbar-brand fw-semibold text-dark text-decoration-none" to="/">MentorConnect</Link>
+          <Link className="navbar-brand fw-semibold text-dark text-decoration-none d-flex align-items-center" to="/">
+            <img src="/images/logo.png" alt="Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} className="me-2 rounded-circle" />
+            <span>MentorConnect</span>
+          </Link>
         </div>
       </nav>
 
