@@ -1,174 +1,233 @@
-import { useEffect } from 'react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebase'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 
 function Signup() {
-  useEffect(() => {
-    function registerUser(formId, nameId, emailId, passwordId, confirmPasswordId, role) {
-      const form = document.getElementById(formId)
-      const msg = document.getElementById('msg')
-      const handler = async (e) => {
-        e.preventDefault()
-        form.classList.add('was-validated')
-        const name = document.getElementById(nameId).value.trim()
-        const email = document.getElementById(emailId).value.trim()
-        const password = document.getElementById(passwordId).value
-        const confirmPassword = document.getElementById(confirmPasswordId).value
-        if (!form.checkValidity()) return
-        if (password !== confirmPassword) {
-          msg.textContent = '❌ Passwords do not match'
-          msg.className = 'mt-3 text-center small text-danger'
-          return
-        }
-        msg.textContent = 'Processing...'
-        msg.className = 'mt-3 text-center small text-primary'
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          const user = userCredential.user;
-          const userData = { name, email: email.toLowerCase(), role, createdAt: new Date().toISOString() };
-          await setDoc(doc(db, "users", user.uid), userData);
+  const navigate = useNavigate()
+  
+  // Registration States
+  const [role, setRole] = useState('mentee') // mentee, mentor
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  
+  // Feedback Messages
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
-          
-          msg.textContent = '✅ Account created successfully! Redirecting...'
-          msg.className = 'mt-3 text-center small text-success'
-          setTimeout(() => {
-            if (role === 'mentor') {
-              window.location.hash = '#/mentor-dashboard'
-            } else {
-              window.location.hash = '#/mentee-dashboard'
-            }
-          }, 1500)
-        } catch (error) {
-          console.error('Firebase error:', error)
-          msg.textContent = `❌ ${error.message}`
-          msg.className = 'mt-3 text-center small text-danger'
-        }
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault()
+    setErrorMsg('')
+    setSuccessMsg('')
+
+    if (!name || !email || !password || !confirmPassword) {
+      setErrorMsg('❌ All registration fields are required.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('❌ Passwords do not match.')
+      return
+    }
+
+    if (password.length < 6) {
+      setErrorMsg('❌ Password must be at least 6 characters.')
+      return
+    }
+
+    setLoading(true)
+    setSuccessMsg('Registering details...')
+
+    try {
+      const emailLower = email.toLowerCase().trim()
+      // Admin auto-assignment if email has 'admin'
+      let finalRole = role
+      let finalStatus = 'approved' // default status
+      
+      if (emailLower.includes('admin')) {
+        finalRole = 'admin'
+      } else if (role === 'mentor') {
+        finalStatus = 'pending' // Mentors require approval by default
       }
-      form?.addEventListener('submit', handler)
-      return () => form?.removeEventListener('submit', handler)
-    }
 
-    const cleanup1 = registerUser('menteeRegisterForm', 'menteeName', 'menteeEmail', 'menteePassword', 'menteeConfirmPassword', 'mentee')
-    const cleanup2 = registerUser('mentorRegisterForm', 'mentorName', 'mentorEmail', 'mentorPassword', 'mentorConfirmPassword', 'mentor')
-    return () => {
-      cleanup1 && cleanup1()
-      cleanup2 && cleanup2()
+      const userCredential = await createUserWithEmailAndPassword(auth, emailLower, password)
+      const user = userCredential.user
+
+      const userData = {
+        name: name.trim(),
+        email: emailLower,
+        role: finalRole,
+        status: finalStatus,
+        createdAt: new Date().toISOString(),
+        bio: '',
+        skills: ''
+      }
+
+      let collectionName = 'mentees'
+      if (finalRole === 'admin') {
+        collectionName = 'admins'
+      } else if (finalRole === 'mentor') {
+        collectionName = 'mentors'
+      }
+
+      await setDoc(doc(db, collectionName, user.uid), userData)
+
+      setSuccessMsg('✅ Account created successfully! Redirecting...')
+      
+      setTimeout(() => {
+        if (finalRole === 'admin') {
+          window.location.hash = '#/admin-dashboard'
+        } else if (finalRole === 'mentor') {
+          window.location.hash = '#/mentor-dashboard'
+        } else {
+          window.location.hash = '#/mentee-dashboard'
+        }
+      }, 1200)
+
+    } catch (error) {
+      console.error('Signup error:', error)
+      setErrorMsg(`❌ ${error.message}`)
+      setSuccessMsg('')
+      setLoading(false)
     }
-  }, [])
+  }
 
   return (
     <>
-      <nav className="navbar py-2" style={{ backgroundColor: '#fff', borderBottom: '1px solid #e2e8f0' }}>
+      {/* Navbar */}
+      <nav className="navbar py-3" style={{ backgroundColor: '#fff', borderBottom: '1px solid #e2e8f0' }}>
         <div className="container d-flex align-items-center">
-          <button className="btn btn-link p-0 me-3" onClick={() => (window.location.href = '/') } aria-label="Back">
-            <i className="bi bi-arrow-left fs-5"></i>
-          </button>
-          <a className="navbar-brand fw-semibold" href="#">MentorConnect</a>
+          <Link className="btn btn-link p-0 me-3 text-dark text-decoration-none" to="/" aria-label="Back">
+            <i className="bi bi-arrow-left fs-4"></i>
+          </Link>
+          <Link className="navbar-brand fw-semibold text-dark text-decoration-none" to="/">MentorConnect</Link>
           <div className="ms-auto">
-            <a href="#/login" className="btn btn-outline-primary btn-sm">Login</a>
+            <Link to="/login" className="btn btn-outline-primary btn-sm rounded-pill px-3">Login</Link>
           </div>
         </div>
       </nav>
 
-      <section className="flex-grow-1 d-flex align-items-center justify-content-center py-5" style={{ backgroundColor: '#f0f4f8' }}>
+      {/* Main Container */}
+      <section className="flex-grow-1 d-flex align-items-center justify-content-center py-5" style={{ background: 'linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%)', minHeight: 'calc(100vh - 70px)' }}>
         <div className="container">
           <div className="row justify-content-center">
-            <div className="col-md-7 col-lg-6">
-              <div className="card p-4 rounded-4" style={{ border: '1px solid #e0e0e0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                <h4 className="text-center fw-bold mb-4">Create Your Account</h4>
-                <ul className="nav nav-tabs justify-content-center mb-4" id="registerTabs" role="tablist">
-                  <li className="nav-item" role="presentation">
-                    <button className="nav-link active" id="mentee-tab" data-bs-toggle="tab" data-bs-target="#mentee" type="button" role="tab">Mentee</button>
+            <div className="col-md-8 col-lg-6 col-xl-5">
+              <div className="card border-0 rounded-4 p-4 p-md-5 shadow-lg bg-white">
+                
+                <div className="text-center mb-4">
+                  <h4 className="fw-bold text-dark">Create Account</h4>
+                  <p className="small text-muted mb-0">Join our mentorship connection to start sharing or learning.</p>
+                </div>
+
+                {errorMsg && <div className="alert alert-danger py-2 px-3 small rounded-3 mb-3">{errorMsg}</div>}
+                {successMsg && <div className="alert alert-success py-2 px-3 small rounded-3 mb-3">{successMsg}</div>}
+
+                {/* Tabs to select Role */}
+                <ul className="nav nav-pills justify-content-center mb-4 gap-2 bg-light p-1 rounded-3" id="roleTabs">
+                  <li className="nav-item flex-fill text-center">
+                    <button 
+                      className={`nav-link w-100 rounded-2 fw-semibold py-2 ${role === 'mentee' ? 'active bg-primary text-white' : 'text-muted border-0 bg-transparent'}`} 
+                      onClick={() => setRole('mentee')}
+                      type="button"
+                    >
+                      <i className="bi bi-mortarboard-fill me-2"></i>Mentee Student
+                    </button>
                   </li>
-                  <li className="nav-item" role="presentation">
-                    <button className="nav-link" id="mentor-tab" data-bs-toggle="tab" data-bs-target="#mentor" type="button" role="tab">Mentor</button>
+                  <li className="nav-item flex-fill text-center">
+                    <button 
+                      className={`nav-link w-100 rounded-2 fw-semibold py-2 ${role === 'mentor' ? 'active bg-success text-white' : 'text-muted border-0 bg-transparent'}`} 
+                      onClick={() => setRole('mentor')}
+                      type="button"
+                    >
+                      <i className="bi bi-briefcase-fill me-2"></i>Urban Mentor
+                    </button>
                   </li>
                 </ul>
-                <div className="tab-content" id="registerTabsContent">
-                  <div className="tab-pane fade show active" id="mentee" role="tabpanel">
-                    <form id="menteeRegisterForm" noValidate className="needs-validation">
-                      <div className="mb-3">
-                        <label htmlFor="menteeName" className="form-label">Full Name</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-person-fill text-primary"></i></span>
-                          <input type="text" className="form-control" id="menteeName" required />
-                          <div className="invalid-feedback">Full name is required</div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label htmlFor="menteeEmail" className="form-label">Email address</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-envelope-fill text-primary"></i></span>
-                          <input type="email" className="form-control" id="menteeEmail" required />
-                          <div className="invalid-feedback">Please enter a valid email</div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label htmlFor="menteePassword" className="form-label">Password</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-lock-fill text-primary"></i></span>
-                          <input type="password" className="form-control" id="menteePassword" minLength={6} required />
-                          <div className="invalid-feedback">Password must be at least 6 characters</div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label htmlFor="menteeConfirmPassword" className="form-label">Confirm Password</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-shield-lock-fill text-primary"></i></span>
-                          <input type="password" className="form-control" id="menteeConfirmPassword" minLength={6} required />
-                          <div className="invalid-feedback">Passwords do not match</div>
-                        </div>
-                      </div>
-                      <div className="d-grid">
-                        <button type="submit" className="btn btn-primary btn-lg rounded-3" style={{ backgroundColor: '#0ea5e9', border: 'none' }}>Register as Mentee</button>
-                      </div>
-                    </form>
+
+                <form onSubmit={handleRegisterSubmit}>
+                  
+                  {/* Full Name */}
+                  <div className="mb-3">
+                    <label className="form-label">Full Name</label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-transparent"><i className="bi bi-person text-muted"></i></span>
+                      <input 
+                        type="text" 
+                        className="form-control ps-2" 
+                        placeholder="e.g. Ritika Sharma" 
+                        value={name} 
+                        onChange={e => setName(e.target.value)} 
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="tab-pane fade" id="mentor" role="tabpanel">
-                    <form id="mentorRegisterForm" noValidate className="needs-validation">
-                      <div className="mb-3">
-                        <label htmlFor="mentorName" className="form-label">Full Name</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-person-fill text-primary"></i></span>
-                          <input type="text" className="form-control" id="mentorName" required />
-                          <div className="invalid-feedback">Full name is required</div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label htmlFor="mentorEmail" className="form-label">Email address</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-envelope-fill text-primary"></i></span>
-                          <input type="email" className="form-control" id="mentorEmail" required />
-                          <div className="invalid-feedback">Please enter a valid email</div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label htmlFor="mentorPassword" className="form-label">Password</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-lock-fill text-primary"></i></span>
-                          <input type="password" className="form-control" id="mentorPassword" minLength={6} required />
-                          <div className="invalid-feedback">Password must be at least 6 characters</div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label htmlFor="mentorConfirmPassword" className="form-label">Confirm Password</label>
-                        <div className="input-group">
-                          <span className="input-group-text"><i className="bi bi-shield-lock-fill text-primary"></i></span>
-                          <input type="password" className="form-control" id="mentorConfirmPassword" minLength={6} required />
-                          <div className="invalid-feedback">Passwords do not match</div>
-                        </div>
-                      </div>
-                      <div className="d-grid">
-                        <button type="submit" className="btn btn-primary btn-lg rounded-3" style={{ backgroundColor: '#0ea5e9', border: 'none' }}>Register as Mentor</button>
-                      </div>
-                    </form>
+
+                  {/* Email */}
+                  <div className="mb-3">
+                    <label className="form-label">Email Address</label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-transparent"><i className="bi bi-envelope text-muted"></i></span>
+                      <input 
+                        type="email" 
+                        className="form-control ps-2" 
+                        placeholder="name@example.com" 
+                        value={email} 
+                        onChange={e => setEmail(e.target.value)} 
+                        required 
+                      />
+                    </div>
                   </div>
+
+                  {/* Password */}
+                  <div className="mb-3">
+                    <label className="form-label">Password</label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-transparent"><i className="bi bi-lock text-muted"></i></span>
+                      <input 
+                        type="password" 
+                        className="form-control ps-2" 
+                        placeholder="•••••••• (Min 6 chars)" 
+                        value={password} 
+                        onChange={e => setPassword(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="mb-4">
+                    <label className="form-label">Confirm Password</label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-transparent"><i className="bi bi-shield-lock text-muted"></i></span>
+                      <input 
+                        type="password" 
+                        className="form-control ps-2" 
+                        placeholder="••••••••" 
+                        value={confirmPassword} 
+                        onChange={e => setConfirmPassword(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="d-grid mb-3">
+                    <button type="submit" className="btn btn-accent btn-lg py-2.5 rounded-3 text-white fs-6" disabled={loading}>
+                      {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-person-check me-2"></i>}
+                      Register as {role === 'mentor' ? 'Mentor' : 'Mentee'}
+                    </button>
+                  </div>
+                </form>
+
+         
+
+                <div className="text-center mt-4 pt-3 border-top">
+                  <p className="small text-muted mb-0">Already registered? <Link to="/login" className="fw-semibold text-primary text-decoration-none">Log in</Link></p>
                 </div>
-                <div className="text-center mt-4">
-                  <p className="small mb-0">Already have an account? <a href="#/login" className="fw-semibold text-primary">Login</a></p>
-                </div>
-                <div id="msg" className="mt-3 text-center small"></div>
+
               </div>
             </div>
           </div>

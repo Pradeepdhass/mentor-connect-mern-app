@@ -1,225 +1,382 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { db } from '../firebase'
+import { collection, addDoc } from 'firebase/firestore'
 
 function Home() {
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light')
+  
+  const [contactName, setContactName] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
+  const [contactMessage, setContactMessage] = useState('')
+  const [formStatus, setFormStatus] = useState('')
+  const [formErr, setFormErr] = useState('')
+
   useEffect(() => {
-    const toggle = document.getElementById('darkModeToggle')
     const body = document.body
-    if (toggle) {
-      const onChange = function () {
-        body.classList.toggle('dark-mode')
-        localStorage.setItem('theme', this.checked ? 'dark' : 'light')
-      }
-      toggle.addEventListener('change', onChange)
-      if (localStorage.getItem('theme') === 'dark') {
-        body.classList.add('dark-mode')
-        toggle.checked = true
-      }
-      return () => toggle.removeEventListener('change', onChange)
+    if (theme === 'dark') {
+      body.classList.add('dark-mode')
+    } else {
+      body.classList.remove('dark-mode')
     }
-  }, [])
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const handleToggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+  }
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault()
+    if (!contactName || !contactEmail || !contactMessage) {
+      setFormErr('Please complete all form fields.')
+      return
+    }
+    setFormStatus('⌛ Sending message...')
+    setFormErr('')
+    
+    try {
+      await addDoc(collection(db, "contact_messages"), {
+        name: contactName,
+        email: contactEmail,
+        message: contactMessage,
+        createdAt: new Date().toISOString()
+      })
+      setFormStatus('✅ Your message has been sent successfully!')
+      setContactName('')
+      setContactEmail('')
+      setContactMessage('')
+    } catch (err) {
+      console.error(err)
+      setFormErr('❌ Failed to send message. Please try again.')
+      setFormStatus('')
+    }
+  }
 
   return (
     <>
+      {/* Navigation Header */}
       <nav className="navbar navbar-expand-lg custom-navbar sticky-top shadow-sm">
         <div className="container">
-          <a className="navbar-brand fw-bold text-light" href="#">
-            <i className="bi bi-lightning-charge-fill me-2 text-info"></i>MentorConnect
-          </a>
+          <Link className="navbar-brand fw-bold d-flex align-items-center" to="/">
+            <i className="bi bi-rocket-takeoff-fill me-2 text-info"></i>
+            <span>MentorConnect</span>
+          </Link>
+          
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span className="navbar-toggler-icon"></span>
           </button>
+          
           <div className="collapse navbar-collapse" id="navMenu">
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 gap-2 gap-lg-0">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-3">
               <li className="nav-item"><a className="nav-link active" href="#">Home</a></li>
-              <li className="nav-item"><Link className="nav-link" to="/signup">Sign Up</Link></li>
-              <li className="nav-item"><Link className="nav-link" to="/login">Login</Link></li>
-              <li className="nav-item"><a className="nav-link" href="#" onClick={(e) => { e.preventDefault(); document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' }); }}>FAQ</a></li>
-              <li className="nav-item dropdown">
-                <a className="nav-link  d-flex align-items-center gap-1" href="#" id="resourcesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Resources <span className="small">▼</span></a>
-                <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="resourcesDropdown">
-                  <li><a className="dropdown-item" href="#">Tutorials</a></li>
-                  <li><a className="dropdown-item" href="#">Community Forum</a></li>
-                  <li><hr className="dropdown-divider"/></li>
-                  <li><a className="dropdown-item" href="#">Support</a></li>
-                </ul>
+              <li className="nav-item"><Link className="nav-link" to="/signup">Find Mentor</Link></li>
+              <li className="nav-item"><Link className="nav-link" to="/signup">Become Mentor</Link></li>
+              <li className="nav-item">
+                <a className="nav-link" href="#" onClick={(e) => { e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); }}>
+                  How It Works
+                </a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link" href="#" onClick={(e) => { e.preventDefault(); document.getElementById('contact-us')?.scrollIntoView({ behavior: 'smooth' }); }}>
+                  Contact
+                </a>
+              </li>
+              <li className="nav-item d-none d-lg-block">
+                <Link to="/login" className="btn btn-outline-light btn-sm rounded-pill px-3">Login</Link>
+              </li>
+              <li className="nav-item d-none d-lg-block">
+                <Link to="/signup" className="btn btn-accent btn-sm rounded-pill px-3 text-white">Get Started</Link>
+              </li>
+              
+              {/* Dark Mode Switcher */}
+              <li className="nav-item ps-lg-2">
+                <button 
+                  className="btn btn-link nav-link p-0 border-0 bg-transparent text-white" 
+                  onClick={handleToggleTheme}
+                  title="Toggle Theme"
+                  aria-label="Toggle Theme"
+                >
+                  {theme === 'dark' ? <i className="bi bi-sun-fill text-warning fs-5"></i> : <i className="bi bi-moon-stars-fill text-info fs-5"></i>}
+                </button>
               </li>
             </ul>
-            <div className="form-check form-switch ms-lg-3 mt-2 mt-lg-0">
-              <input className="form-check-input" type="checkbox" id="darkModeToggle" />
-              <label className="form-check-label text-white" htmlFor="darkModeToggle">Dark Mode</label>
-            </div>
           </div>
         </div>
       </nav>
 
-      <section className="hero position-relative ">
-        <div id="heroCarousel" className="carousel slide carousel-fade position-absolute top-0 start-0 w-100 h-100" data-bs-ride="carousel" data-bs-interval="5000" style={{ zIndex: 0 }}>
-          <div className="carousel-inner h-100">
-            <div className="carousel-item active">
-              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80" className="d-block w-100 carousel-img" alt="Slide 1" />
-            </div>
-            <div className="carousel-item">
-              <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1200&q=80" className="d-block w-100 carousel-img" alt="Slide 2" />
-            </div>
-            <div className="carousel-item">
-              <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80" className="d-block w-100 carousel-img" alt="Slide 3" />
-            </div>
-          </div>
+      {/* Hero Section */}
+      <section className="hero position-relative d-flex align-items-center justify-content-center py-5">
+        <div className="position-absolute top-0 start-0 w-100 h-100 overflow-hidden" style={{ zIndex: 0 }}>
+          <img 
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1400&q=80" 
+            className="w-100 h-100 object-fit-cover" 
+            style={{ filter: 'brightness(25%)' }} 
+            alt="Mentorship Connections Background" 
+          />
         </div>
 
-        <div className="container glass-cards no-dark-mode position-relative text-white text-center py-5 px-4" style={{ zIndex: 1 }}>
-          <h1 className="display-4 fw-bold mb-3 text-shadow">Welcome to <span className="text-accent">MentorConnect</span></h1>
-          <p className="lead mb-4 text-light">Seamlessly connect with mentors and mentees tailored to your goals, expertise, and availability.</p>
-          <div className="d-flex justify-content-center gap-3 flex-wrap">
-            <Link to="/signup" className="btn btn-lg btn-accent px-5 shadow-sm">Get Started</Link>
-            <Link to="/login" className="btn btn-lg btn-outline-light px-5 shadow-sm">Login</Link>
+        <div className="container position-relative text-white text-center px-4 py-5" style={{ zIndex: 1, maxWidth: 850 }}>
+          <span className="badge bg-info-subtle text-info fs-6 px-3 py-2 rounded-pill mb-3 uppercase animate__animated animate__fadeInDown">
+            Empowering Rural Minds through Urban Mentorship
+          </span>
+          <h1 className="display-3 fw-extrabold mb-3 text-shadow animate__animated animate__fadeInUp" style={{ letterSpacing: '-1.5px', lineHeight: 1.15 }}>
+            Urban Rural Mentor Mentee Connection
+          </h1>
+          <p className="lead mb-4 text-light-emphasis fs-4 animate__animated animate__fadeInUp animate__delay-1s" style={{ fontWeight: 400, opacity: 0.9 }}>
+            Connecting experienced Urban Industry Professionals with aspirational Rural Students to provide career guidance, personal mentoring, tech skills, and vital industry exposure.
+          </p>
+          <div className="d-flex justify-content-center gap-3 flex-wrap animate__animated animate__fadeInUp animate__delay-1s">
+            <Link to="/signup" className="btn btn-lg btn-accent px-4 py-3 shadow-lg fs-6">
+              <i className="bi bi-search me-2"></i>Find Mentor
+            </Link>
+            <Link to="/signup" className="btn btn-lg btn-outline-light px-4 py-3 fs-6">
+              Become Mentor<i className="bi bi-arrow-right ms-2"></i>
+            </Link>
+            <a href="#features" className="btn btn-lg btn-link text-white text-decoration-none fs-6">
+              Explore Platform <i className="bi bi-arrow-down"></i>
+            </a>
           </div>
         </div>
       </section>
 
-      <section className="how-it-works py-5 text-center bg-light">
+      {/* Platform Statistics Section */}
+      <section className="py-5 bg-white text-center border-bottom">
         <div className="container">
-          <h2 className="mb-4 fw-bold text-dark">How <span className="text-primary">MentorConnect</span> Works</h2>
-          <p className="text-muted mb-5">A simple, effective, and guided way to connect mentors and mentees.</p>
+          <div className="row g-4">
+            <div className="col-6 col-md-3">
+              <div className="p-3">
+                <i className="bi bi-people-fill text-primary display-5 mb-2"></i>
+                <h3 className="fw-bold mb-1">500+</h3>
+                <p className="text-muted small uppercase mb-0">Active Students</p>
+              </div>
+            </div>
+            <div className="col-6 col-md-3">
+              <div className="p-3">
+                <i className="bi bi-person-workspace text-success display-5 mb-2"></i>
+                <h3 className="fw-bold mb-1">150+</h3>
+                <p className="text-muted small uppercase mb-0">Industry Experts</p>
+              </div>
+            </div>
+            <div className="col-6 col-md-3">
+              <div className="p-3">
+                <i className="bi bi-camera-video-fill text-warning display-5 mb-2"></i>
+                <h3 className="fw-bold mb-1">2,000+</h3>
+                <p className="text-muted small uppercase mb-0">Mentorship Hours</p>
+              </div>
+            </div>
+            <div className="col-6 col-md-3">
+              <div className="p-3">
+                <i className="bi bi-geo-alt-fill text-danger display-5 mb-2"></i>
+                <h3 className="fw-bold mb-1">30+</h3>
+                <p className="text-muted small uppercase mb-0">Rural Communities</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Core Features Grid */}
+      <section id="features" className="py-5 bg-light">
+        <div className="container">
+          <div className="text-center max-width-600 mx-auto mb-5">
+            <span className="text-primary fw-semibold small uppercase">Why MentorConnect?</span>
+            <h2 className="fw-bold mt-2 text-dark">Platform Offerings & Support</h2>
+            <p className="text-muted small">Bridging the geographical divide with real-time digital mentoring resources.</p>
+          </div>
+          
           <div className="row g-4">
             <div className="col-md-4">
-              <div className="p-3 bg-white border border-info rounded h-100">
-                <div className="mb-3 text-info"><i className="bi bi-person-plus-fill fs-2"></i></div>
-                <h5 className="fw-semibold">1. Create Your Profile</h5>
-                <p className="text-muted">Sign up and showcase your skills, goals, and preferences as a mentor or mentee.</p>
+              <div className="card-box bg-white h-100">
+                <div className="widget-icon icon-primary mb-3"><i className="bi bi-chat-left-dots-fill"></i></div>
+                <h5 className="fw-bold mb-2 text-dark">Direct Mentorship</h5>
+                <p className="text-muted small mb-0">Connect directly with professionals working in Tech, Design, Finance, and Engineering for personalized instruction.</p>
               </div>
             </div>
+            
             <div className="col-md-4">
-              <div className="p-3 bg-white border border-success rounded h-100">
-                <div className="mb-3 text-success"><i className="bi bi-link fs-2"></i></div>
-                <h5 className="fw-semibold">2. Get Matched</h5>
-                <p className="text-muted">Our intelligent algorithm recommends the best match based on your profile and needs.</p>
+              <div className="card-box bg-white h-100">
+                <div className="widget-icon icon-success mb-3"><i className="bi bi-briefcase-fill"></i></div>
+                <h5 className="fw-bold mb-2 text-dark">Career Guidance</h5>
+                <p className="text-muted small mb-0">Learn resume building, interview etiquette, portfolio development, and standard workflow strategies from insiders.</p>
               </div>
             </div>
+
             <div className="col-md-4">
-              <div className="p-3 bg-white border border-primary rounded h-100">
-                <div className="mb-3 text-primary"><i className="bi bi-chat-dots-fill fs-2"></i></div>
-                <h5 className="fw-semibold">3. Connect & Grow</h5>
-                <p className="text-muted">Start your mentoring journey with tools, communication, and guidance in one platform.</p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4">
-            <Link to="/signup" className="btn btn-primary px-4">Join MentorConnect</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="features-section py-4 bg-light text-center">
-        <div className="container">
-          <h2 className="mb-3">Why Choose <span className="text-primary">MentorConnect</span>?</h2>
-          <p className="text-muted mb-4">We bring mentors and mentees together through innovation and care.</p>
-          <div className="row">
-            <div className="col-md-4 mb-3">
-              <div className="p-3 bg-white border border-info rounded h-100">
-                <div className="mb-3 text-info"><i className="bi bi-person-plus-fill fs-2"></i></div>
-                <h5>Community-Driven</h5>
-                <p className="text-muted">Join a supportive network of like-minded professionals and learners.</p>
-              </div>
-            </div>
-            <div className="col-md-4 mb-3">
-              <div className="p-3 bg-white border border-success rounded h-100">
-                <div className="mb-3 text-success"><i className="bi bi-speedometer2 fs-2"></i></div>
-                <h5>Fast Matching</h5>
-                <p className="text-muted">Get matched instantly with mentors or mentees that suit your goals.</p>
-              </div>
-            </div>
-            <div className="col-md-4 mb-3">
-              <div className="p-3 bg-white border border-primary rounded h-100">
-                <div className="mb-3 text-primary"><i className="bi bi-globe2 fs-2"></i></div>
-                <h5>Global Access</h5>
-                <p className="text-muted">Connect across countries with people who share your vision and passion.</p>
+              <div className="card-box bg-white h-100">
+                <div className="widget-icon icon-warning mb-3"><i className="bi bi-laptop-fill"></i></div>
+                <h5 className="fw-bold mb-2 text-dark">Industry Exposure</h5>
+                <p className="text-muted small mb-0">Receive insights on product cycles, corporate structures, and tools standard in top global companies.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-4 bg-light text-center">
+      {/* Interactive "How It Works" Timeline */}
+      <section id="how-it-works" className="py-5 bg-white">
         <div className="container">
-          <h2 className="mb-3">What Our Users Say</h2>
-          <p className="text-muted mb-4">Stories from people who’ve benefited from MentorConnect.</p>
-          <div className="row">
-            <div className="col-md-4 mb-4">
-              <blockquote>
-                <p>"MentorConnect helped me find a mentor who truly understands my goals."</p>
-                <footer className="blockquote-footer">Pradeep R., Software Engineer</footer>
-              </blockquote>
-            </div>
-            <div className="col-md-4 mb-4">
-              <blockquote>
-                <p>"As a mentor, it’s been amazing to guide students and professionals worldwide."</p>
-                <footer className="blockquote-footer">Arun S., Tech Lead & Mentor</footer>
-              </blockquote>
-            </div>
-            <div className="col-md-4 mb-4">
-              <blockquote>
-                <p>"I found a mentor who helped me navigate my career switch. Forever grateful!"</p>
-                <footer className="blockquote-footer">Prasanna V., UX Designer</footer>
-              </blockquote>
-            </div>
+          <div className="text-center max-width-600 mx-auto mb-5">
+            <span className="text-success fw-semibold small uppercase">Process Flow</span>
+            <h2 className="fw-bold mt-2 text-dark">How MentorConnect Works</h2>
+            <p className="text-muted small">We streamline connections so you can focus on career growth.</p>
           </div>
-        </div>
-      </section>
 
-      <section className="py-3 text-center bg-light">
-        <div className="container">
-          <div className="row">
-            <div className="col-6 col-md-3 mb-3"><div><i className="bi bi-person-check fs-3"></i></div><p>Verified Mentors</p></div>
-            <div className="col-6 col-md-3 mb-3"><div><i className="bi bi-graph-up-arrow fs-3"></i></div><p>Career Growth</p></div>
-            <div className="col-6 col-md-3 mb-3"><div><i className="bi bi-clock-history fs-3"></i></div><p>Flexible Sessions</p></div>
-            <div className="col-6 col-md-3 mb-3"><div><i className="bi bi-stars fs-3"></i></div><p>Expertise-Based Match</p></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="faq-section py-4 bg-light" id="faq-section">
-        <div className="container">
-          <h2 className="text-center mb-3">FAQs</h2>
-          <div className="accordion" id="faqAccordion">
-            <div className="accordion-item">
-              <h2 className="accordion-header" id="faqOne">
-                <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">What is MentorConnect?</button>
-              </h2>
-              <div id="collapseOne" className="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                <div className="accordion-body">MentorConnect is a platform that connects mentors and mentees based on their goals, skills, and interests.</div>
+          <div className="row g-4 justify-content-center">
+            <div className="col-lg-4">
+              <div className="text-center p-3 border rounded-4 bg-light h-100">
+                <div className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center fw-bold fs-4 mb-3" style={{width: 50, height: 50}}>1</div>
+                <h5 className="fw-bold mb-2 text-dark">Create Account</h5>
+                <p className="text-muted small mb-0">Register as either a rural student seeking guidance or an urban professional ready to give back. Build your profile highlighting goals or expertise.</p>
               </div>
             </div>
-            <div className="accordion-item">
-              <h2 className="accordion-header" id="faqTwo">
-                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">Is MentorConnect free to use?</button>
-              </h2>
-              <div id="collapseTwo" className="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                <div className="accordion-body">Yes, it offers free access to create profiles and connect. Premium features may be introduced later.</div>
+
+            <div className="col-lg-4">
+              <div className="text-center p-3 border rounded-4 bg-light h-100">
+                <div className="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center fw-bold fs-4 mb-3" style={{width: 50, height: 50}}>2</div>
+                <h5 className="fw-bold mb-2 text-dark">Get Matched</h5>
+                <p className="text-muted small mb-0">Admin approves users and pairs mentees with ideal mentors. Or, students can request connections from our directory of verified experts.</p>
               </div>
             </div>
-            <div className="accordion-item">
-              <h2 className="accordion-header" id="faqThree">
-                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">Can I be both a mentor and a mentee?</button>
-              </h2>
-              <div id="collapseThree" className="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                <div className="accordion-body">Yes! You can mentor in your area of expertise and learn from others in areas you're growing in.</div>
+
+            <div className="col-lg-4">
+              <div className="text-center p-3 border rounded-4 bg-light h-100">
+                <div className="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center fw-bold fs-4 mb-3" style={{width: 50, height: 50}}>3</div>
+                <h5 className="fw-bold mb-2 text-dark">Attend Sessions & Learn</h5>
+                <p className="text-muted small mb-0">Schedule video calls directly in-app, share resources, collaborate on documents in real-time, and check milestones off your career progress dashboard.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <footer id="footer" className="bg-light text-center text-muted py-4 border-top">
-        <div className="container">
-          <div className="mb-3">
-            <a href="#" className="text-muted me-3"><i className="bi bi-facebook"></i></a>
-            <a href="#" className="text-muted me-3"><i className="bi bi-twitter"></i></a>
-            <a href="#" className="text-muted me-3"><i className="bi bi-instagram"></i></a>
-            <a href="#" className="text-muted"><i className="bi bi-linkedin"></i></a>
+      {/* Testimonials */}
+      <section className="py-5 bg-light text-center">
+        <div className="container" style={{ maxWidth: 800 }}>
+          <span className="text-primary fw-semibold small uppercase">Impact Stories</span>
+          <h2 className="fw-bold mt-2 mb-4 text-dark">Hear From Our Users</h2>
+          
+          <div id="testimonialCarousel" className="carousel slide" data-bs-ride="carousel">
+            <div className="carousel-inner card-box bg-white border-0 py-5 px-4 rounded-4 shadow-sm">
+              <div className="carousel-item active">
+                <p className="lead fs-5 italic text-muted">"Coming from a small village, I had no access to software engineers. Through MentorConnect, my mentor Ritika guided me through web development, helped edit my resume, and coached me for interview loops. I recently landed my junior engineer job!"</p>
+                <h6 className="fw-bold text-primary mt-3 mb-1">Ramesh Kumar</h6>
+                <span className="text-muted small">Mentee, Software Developer</span>
+              </div>
+              <div className="carousel-item">
+                <p className="lead fs-5 italic text-muted">"It's extremely fulfilling to witness direct career progress in these students. Ramesh was eager to learn and just needed practical guidance on software engineering. Spending an hour a week makes a massive difference in their lives."</p>
+                <h6 className="fw-bold text-success mt-3 mb-1">Ritika Anand</h6>
+                <span className="text-muted small">Mentor, Senior Design Engineer</span>
+              </div>
+              <div className="carousel-item">
+                <p className="lead fs-5 italic text-muted">"The structure of the career progress checklists, the live video call environment, and shared notes make coordination seamless. This platform is a game changer for rural accessibility to quality mentorship."</p>
+                <h6 className="fw-bold text-warning mt-3 mb-1">Pradeep D.</h6>
+                <span className="text-muted small">Platform Coordinator & Educator</span>
+              </div>
+            </div>
+            
+            <button className="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev" aria-label="Previous">
+              <span className="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true" style={{width: 30, height: 30}}></span>
+            </button>
+            <button className="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next" aria-label="Next">
+              <span className="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true" style={{width: 30, height: 30}}></span>
+            </button>
           </div>
-          <small>© 2025 MentorConnect. All rights reserved.</small>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact-us" className="py-5 bg-white">
+        <div className="container" style={{ maxWidth: 650 }}>
+          <div className="text-center mb-4">
+            <span className="text-danger fw-semibold small uppercase">Get in Touch</span>
+            <h2 className="fw-bold mt-2 text-dark">Contact Platform Support</h2>
+            <p className="text-muted small">Questions about enrollment, corporate sponsorship, or platform features? Drop us a line.</p>
+          </div>
+
+          <div className="card-box bg-light border-0 p-4 rounded-4">
+            {formStatus && <div className="alert alert-success small mb-3">{formStatus}</div>}
+            {formErr && <div className="alert alert-danger small mb-3">{formErr}</div>}
+            
+            <form onSubmit={handleContactSubmit}>
+              <div className="mb-3">
+                <label className="form-label">Full Name</label>
+                <input 
+                  type="text" 
+                  className="form-control bg-white" 
+                  placeholder="e.g. Ramesh Dev" 
+                  value={contactName} 
+                  onChange={e => setContactName(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Email Address</label>
+                <input 
+                  type="email" 
+                  className="form-control bg-white" 
+                  placeholder="name@example.com" 
+                  value={contactEmail} 
+                  onChange={e => setContactEmail(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Message Details</label>
+                <textarea 
+                  className="form-control bg-white" 
+                  rows="4" 
+                  placeholder="How can we help you?" 
+                  value={contactMessage} 
+                  onChange={e => setContactMessage(e.target.value)} 
+                  required 
+                />
+              </div>
+              <button type="submit" className="btn btn-primary w-100 py-2 fw-semibold rounded-3">
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-dark text-white-50 py-5 border-top border-secondary">
+        <div className="container">
+          <div className="row g-4 mb-4">
+            <div className="col-md-6">
+              <h5 className="fw-bold text-white mb-2"><i className="bi bi-rocket-takeoff-fill text-info me-2"></i>MentorConnect</h5>
+              <p className="small mb-0" style={{ maxWidth: 400 }}>A unified enterprise-grade digital platform connecting urban expertise with rural students to cultivate skills, build portfolios, and enable equal opportunities.</p>
+            </div>
+            <div className="col-6 col-md-3">
+              <h6 className="fw-bold text-white mb-3">Links</h6>
+              <ul className="list-unstyled mb-0">
+                <li className="mb-2"><Link to="/login" className="text-white-50 text-decoration-none small">Login Portal</Link></li>
+                <li className="mb-2"><Link to="/signup" className="text-white-50 text-decoration-none small">Student Signup</Link></li>
+                <li><Link to="/signup" className="text-white-50 text-decoration-none small">Mentor Signup</Link></li>
+              </ul>
+            </div>
+            <div className="col-6 col-md-3">
+              <h6 className="fw-bold text-white mb-3">Resources</h6>
+              <ul className="list-unstyled mb-0">
+                <li className="mb-2"><a href="#" className="text-white-50 text-decoration-none small">Platform Guidelines</a></li>
+                <li className="mb-2"><a href="#" className="text-white-50 text-decoration-none small">Rural Opportunities</a></li>
+                <li><a href="#" className="text-white-50 text-decoration-none small">Sponsor Outreach</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <hr className="border-secondary mb-4" />
+          
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <small>© 2026 Urban Rural Mentor Mentee Connection. All rights reserved.</small>
+            <div className="d-flex gap-3">
+              <a href="#" className="text-white-50 fs-5"><i className="bi bi-facebook"></i></a>
+              <a href="#" className="text-white-50 fs-5"><i className="bi bi-twitter"></i></a>
+              <a href="#" className="text-white-50 fs-5"><i className="bi bi-linkedin"></i></a>
+              <a href="#" className="text-white-50 fs-5"><i className="bi bi-instagram"></i></a>
+            </div>
+          </div>
         </div>
       </footer>
     </>
@@ -227,5 +384,3 @@ function Home() {
 }
 
 export default Home
-
-

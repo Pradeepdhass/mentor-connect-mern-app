@@ -20,7 +20,7 @@ function MyMentor() {
     const fetchMentors = async () => {
       setMessage('Loading mentors...')
       try {
-        const q = query(collection(db, "users"), where("role", "==", "mentor"));
+        const q = query(collection(db, "mentors"));
         const querySnapshot = await getDocs(q);
         const fetchedMentors = querySnapshot.docs.map(doc => doc.data());
         setMentors(fetchedMentors)

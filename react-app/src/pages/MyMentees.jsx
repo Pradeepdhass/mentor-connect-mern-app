@@ -19,7 +19,7 @@ function MyMentees() {
     const load = async () => {
       try {
         setMsg('Loading...')
-        const q = query(collection(db, "users"), where("role", "==", "mentee"));
+        const q = query(collection(db, "mentees"));
         const querySnapshot = await getDocs(q);
         const fetchedMentees = querySnapshot.docs.map(doc => doc.data());
         setMentees(fetchedMentees)

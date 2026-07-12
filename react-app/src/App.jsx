@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
@@ -14,12 +15,23 @@ import Profile from './pages/Profile'
 import MyMentees from './pages/MyMentees'
 import Reviews from './pages/Reviews'
 import ForgotPassword from './pages/ForgotPassword'
+import AdminDashboard from './pages/AdminDashboard'
+import VideoCall from './pages/VideoCall'
 
 function App() {
+  useEffect(() => {
+    if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+      const cleanPath = window.location.pathname.replace(/^\/|\/$/g, '');
+      const hash = window.location.hash || ('#/' + cleanPath);
+      window.location.replace('/' + hash);
+    }
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
@@ -33,6 +45,7 @@ function App() {
       <Route path="/messages" element={<Messages />} />
       <Route path="/my-mentor" element={<MyMentor />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/video-call/:sessionId" element={<VideoCall />} />
     </Routes>
   )
 }

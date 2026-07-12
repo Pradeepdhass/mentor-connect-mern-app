@@ -2,72 +2,34 @@ import { useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 
 function Dashboard() {
-  const { userData, loading, logout } = useAuth()
+  const { userData, loading } = useAuth()
 
   useEffect(() => {
     if (loading) return
 
-    const welcomeMessage = document.getElementById('welcomeMessage')
-    const displayName = document.getElementById('displayName')
-    const displayEmail = document.getElementById('displayEmail')
-    const displayRole = document.getElementById('displayRole')
-    const userRoleDisplay = document.getElementById('userRoleDisplay')
-    const logoutButton = document.getElementById('logoutButton')
-
     if (userData) {
-      if (displayName) displayName.textContent = userData.name
-      if (displayEmail) displayEmail.textContent = userData.email
-      if (displayRole) displayRole.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1)
-      if (userRoleDisplay) userRoleDisplay.textContent = `Logged in as: ${userData.role.charAt(0).toUpperCase() + userData.role.slice(1)}`
-      if (welcomeMessage) welcomeMessage.textContent = userData.role === 'mentor' ? 'You are ready to start mentoring!' : 'Start connecting with mentors!'
+      if (userData.role === 'admin') {
+        window.location.hash = '#/admin-dashboard'
+      } else if (userData.role === 'mentor') {
+        window.location.hash = '#/mentor-dashboard'
+      } else {
+        window.location.hash = '#/mentee-dashboard'
+      }
     } else {
-      alert('You must be logged in to view the dashboard.')
       window.location.hash = '#/login'
     }
-
-    const handleLogout = () => {
-      logout()
-    }
-
-    if (logoutButton) {
-      logoutButton.addEventListener('click', handleLogout)
-    }
-
-    return () => {
-      if (logoutButton) {
-        logoutButton.removeEventListener('click', handleLogout)
-      }
-    }
-  }, [userData, loading, logout])
+  }, [userData, loading])
 
   return (
-    <>
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div className="container">
-          <a className="navbar-brand fw-bold" href="#">MentorConnect</a>
-          <span className="ms-auto text-muted" id="userRoleDisplay"></span>
-          <button className="btn btn-danger btn-sm ms-3" id="logoutButton">Logout</button>
+    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+      <div className="text-center">
+        <div className="spinner-border text-primary" role="status" style={{width: '3rem', height: '3rem'}}>
+          <span className="visually-hidden">Loading...</span>
         </div>
-      </nav>
-
-      <div className="container py-5">
-        <div className="card p-4 shadow">
-          <h1 className="mb-3">Welcome to your Dashboard!</h1>
-          <p className="lead">Account Status: <strong id="welcomeMessage"></strong></p>
-          <div className="mt-4">
-            <h5>Your Details:</h5>
-            <ul className="list-group list-group-flush">
-              <li className="list-group-item">Name: <strong id="displayName"></strong></li>
-              <li className="list-group-item">Email: <strong id="displayEmail"></strong></li>
-              <li className="list-group-item">Role: <strong id="displayRole"></strong></li>
-            </ul>
-          </div>
-        </div>
+        <p className="mt-3 fw-medium text-secondary">Redirecting to your dashboard portal...</p>
       </div>
-    </>
+    </div>
   )
 }
 
 export default Dashboard
-
-
